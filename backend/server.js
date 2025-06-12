@@ -2,10 +2,13 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
-import userRoutes from "./routes/user.route.js";
+import authRoutes from "./routes/auth.route.js";
 import productRoutes from "./routes/product.route.js";
 import paymentRoutes from "./routes/payment.route.js";
 import orderRoutes from "./routes/order.route.js";
+import cartRoutes from "./routes/cart.route.js";
+import couponRoutes from "./routes/coupon.route.js";
+import analyticsRoutes from "./routes/analytics.route.js";
 import { errorHandler } from "./middleware/error.middleware.js";
 
 dotenv.config();
@@ -20,10 +23,13 @@ app.use(cors({
 }));
 
 // Routes
-app.use("/api/users", userRoutes);
+app.use("/api/auth", authRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/orders", orderRoutes);
+app.use("/api/cart", cartRoutes);
+app.use("/api/coupons", couponRoutes);
+app.use("/api/analytics", analyticsRoutes);
 
 // Error handling
 app.use(errorHandler);
