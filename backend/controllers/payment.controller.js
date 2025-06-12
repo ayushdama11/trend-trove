@@ -78,6 +78,16 @@ export const checkoutSuccess = async (req, res) => {
 		const { sessionId } = req.body;
 		const session = await stripe.checkout.sessions.retrieve(sessionId);
 
+		// Check if order already exists for this session
+		const existingOrder = await Order.findOne({ stripeSessionId: sessionId });
+		if (existingOrder) {
+			return res.status(200).json({
+				success: true,
+				message: "Order already processed",
+				orderId: existingOrder._id,
+			});
+		}
+
 		if (session.payment_status === "paid") {
 			if (session.metadata.couponCode) {
 				await Coupon.findOneAndUpdate(

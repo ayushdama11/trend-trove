@@ -1,5 +1,5 @@
-import { redis } from "../lib/redis.js";
 import User from "../models/user.model.js";
+import { RefreshToken } from "../models/refreshToken.model.js";
 import jwt from "jsonwebtoken";
 
 const generateTokens = (userId) => {
@@ -15,7 +15,7 @@ const generateTokens = (userId) => {
 };
 
 const storeRefreshToken = async (userId, refreshToken) => {
-	await redis.set(`refresh_token:${userId}`, refreshToken, "EX", 7 * 24 * 60 * 60); // 7days
+	await RefreshToken.create({ userId, token: refreshToken });
 };
 
 const setCookies = (res, accessToken, refreshToken) => {
@@ -91,7 +91,7 @@ export const logout = async (req, res) => {
 		const refreshToken = req.cookies.refreshToken;
 		if (refreshToken) {
 			const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
-			await redis.del(`refresh_token:${decoded.userId}`);
+			await RefreshToken.deleteOne({ userId: decoded.userId, token: refreshToken });
 		}
 
 		res.clearCookie("accessToken");
@@ -113,9 +113,12 @@ export const refreshToken = async (req, res) => {
 		}
 
 		const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
-		const storedToken = await redis.get(`refresh_token:${decoded.userId}`);
+		const storedToken = await RefreshToken.findOne({ 
+			userId: decoded.userId, 
+			token: refreshToken 
+		});
 
-		if (storedToken !== refreshToken) {
+		if (!storedToken) {
 			return res.status(401).json({ message: "Invalid refresh token" });
 		}
 
